@@ -8,6 +8,10 @@ export function getDatabasePath(): string {
     const custom = process.env.DATABASE_PATH;
     return path.isAbsolute(custom) ? custom : path.resolve(process.cwd(), custom);
   }
+  // On Vercel / AWS Lambda, process.cwd() is read-only. The only writable directory is /tmp
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join('/tmp', 'merchant_zone.db');
+  }
   // Check if legacy fintech_portal.db exists locally
   const legacy = path.resolve(process.cwd(), 'data/fintech_portal.db');
   if (fs.existsSync(legacy)) {
@@ -27,12 +31,14 @@ export function getDb(): Database.Database {
         fs.mkdirSync(dbDir, { recursive: true });
       }
     } catch {
-      // Fallback to local data dir if persistent mount is not accessible during build
-      dbPath = path.resolve(process.cwd(), 'data/merchant_zone.db');
+      // Fallback to /tmp if persistent or local mount is not accessible/writable (e.g. Vercel)
+      dbPath = path.join('/tmp', 'merchant_zone.db');
       dbDir = path.dirname(dbPath);
-      if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
-      }
+      try {
+        if (!fs.existsSync(dbDir)) {
+          fs.mkdirSync(dbDir, { recursive: true });
+        }
+      } catch {}
     }
 
     try {
@@ -41,12 +47,16 @@ export function getDb(): Database.Database {
       _db.pragma('foreign_keys = ON');
       initSchema(_db);
     } catch (err) {
-      console.warn(`Could not open database at ${dbPath}, trying local fallback:`, err);
-      dbPath = path.resolve(process.cwd(), 'data/merchant_zone.db');
-      _db = new Database(dbPath);
-      _db.pragma('journal_mode = WAL');
-      _db.pragma('foreign_keys = ON');
-      initSchema(_db);
+      console.warn(`Could not open database at ${dbPath}, trying /tmp fallback:`, err);
+      try {
+        dbPath = path.join('/tmp', 'merchant_zone.db');
+        _db = new Database(dbPath);
+        _db.pragma('foreign_keys = ON');
+        initSchema(_db);
+      } catch (err2) {
+        console.error('Fatal: Could not initialize SQLite in /tmp:', err2);
+        throw err2;
+      }
     }
   }
   return _db;

@@ -7,7 +7,7 @@ const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp'];
 
 export function getUploadDir(): string {
-  const dir = process.env.UPLOAD_DIR || './uploads';
+  const dir = process.env.UPLOAD_DIR || (process.env.VERCEL ? '/tmp/uploads' : './uploads');
   return path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
 }
 
@@ -19,7 +19,7 @@ export function ensureUploadDir(): string {
     }
     return absPath;
   } catch {
-    const fallback = path.resolve(process.cwd(), 'uploads');
+    const fallback = process.env.VERCEL ? '/tmp/uploads' : path.resolve(process.cwd(), 'uploads');
     if (!fs.existsSync(fallback)) {
       try { fs.mkdirSync(fallback, { recursive: true }); } catch {}
     }

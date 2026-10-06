@@ -20,20 +20,37 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      let res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+
+      if (res.status === 404) {
+        res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      }
+
+      let data: { error?: string } | null = null;
+      try {
+        data = (await res.json()) as { error?: string };
+      } catch {
+        const text = await res.text().catch(() => '');
+        setError(`Server error (${res.status}): ${text.slice(0, 80) || res.statusText || 'Non-JSON server response'}`);
+        return;
+      }
 
       if (res.ok) {
         router.push('/admin/dashboard');
       } else {
-        setError(data.error || 'Login failed');
+        setError(data?.error || `Login failed (${res.status})`);
       }
-    } catch {
-      setError('Network error. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to connect to server. Please try again.';
+      setError(`Connection error: ${msg}`);
     } finally {
       setLoading(false);
     }
