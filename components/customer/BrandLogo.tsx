@@ -205,3 +205,5 @@ export default function BrandLogo({ name, size = 'md', className = '' }: BrandLo
     </div>
   );
 }
+
+export { BrandLogo };

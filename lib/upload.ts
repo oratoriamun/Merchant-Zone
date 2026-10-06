@@ -13,10 +13,18 @@ export function getUploadDir(): string {
 
 export function ensureUploadDir(): string {
   const absPath = getUploadDir();
-  if (!fs.existsSync(absPath)) {
-    fs.mkdirSync(absPath, { recursive: true });
+  try {
+    if (!fs.existsSync(absPath)) {
+      fs.mkdirSync(absPath, { recursive: true });
+    }
+    return absPath;
+  } catch {
+    const fallback = path.resolve(process.cwd(), 'uploads');
+    if (!fs.existsSync(fallback)) {
+      try { fs.mkdirSync(fallback, { recursive: true }); } catch {}
+    }
+    return fallback;
   }
-  return absPath;
 }
 
 export interface UploadResult {

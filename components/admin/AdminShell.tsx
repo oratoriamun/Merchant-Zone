@@ -157,3 +157,5 @@ export default function AdminShell({ children, title }: AdminShellProps) {
     </div>
   );
 }
+
+export { AdminShell };

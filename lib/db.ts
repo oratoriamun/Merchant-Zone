@@ -20,15 +20,34 @@ let _db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!_db) {
-    const dbPath = getDatabasePath();
-    const dbDir = path.dirname(dbPath);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
+    let dbPath = getDatabasePath();
+    let dbDir = path.dirname(dbPath);
+    try {
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+    } catch {
+      // Fallback to local data dir if persistent mount is not accessible during build
+      dbPath = path.resolve(process.cwd(), 'data/merchant_zone.db');
+      dbDir = path.dirname(dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
     }
-    _db = new Database(dbPath);
-    _db.pragma('journal_mode = WAL');
-    _db.pragma('foreign_keys = ON');
-    initSchema(_db);
+
+    try {
+      _db = new Database(dbPath);
+      _db.pragma('journal_mode = WAL');
+      _db.pragma('foreign_keys = ON');
+      initSchema(_db);
+    } catch (err) {
+      console.warn(`Could not open database at ${dbPath}, trying local fallback:`, err);
+      dbPath = path.resolve(process.cwd(), 'data/merchant_zone.db');
+      _db = new Database(dbPath);
+      _db.pragma('journal_mode = WAL');
+      _db.pragma('foreign_keys = ON');
+      initSchema(_db);
+    }
   }
   return _db;
 }
