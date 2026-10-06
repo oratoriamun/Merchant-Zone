@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MERCHANT ZONE — Digital Payment & Banking Solutions Portal
 
-## Getting Started
+Official production portal for **MERCHANT ZONE**.
 
-First, run the development server:
+## Features
+
+- **Customer Portal**:
+  - Full catalog of 28 merchant, wallet, savings, current account, and agent onboarding services.
+  - Working dynamic "Apply Now" buttons carrying service details & pricing.
+  - Interactive onboarding documents guide (Aadhaar, PAN, Bank details).
+  - Integrated BharatPe UPI payment QR with 1-click copy for UPI ID (`BHARATPE2L0X0O7J8C90743@unitype`).
+  - UTR / Transaction reference verification and screenshot upload.
+  - Instant Order ID generation (e.g. `ORD-2026-XXXXXX`).
+  - Real-time customer order tracking at `/track`.
+
+- **Admin Management Panel (`/admin`)**:
+  - Secure credential-based login (Username: `admin`, Default Password: `Rocky@22`).
+  - Dashboard stats & metrics.
+  - Order review with payment screenshot lightbox preview and UTR checking.
+  - Change payment status (`RECEIVED`, `REJECTED`, `PENDING`) and order lifecycle status (`PROCESSING`, `COMPLETED`, `CANCELLED`).
+  - Replaceable payment QR in Admin Settings (`/admin/settings`).
+  - Service catalog management (pricing & active status toggling).
+  - Immutable audit logs (`/admin/audit`).
+
+## Running Locally
 
 ```bash
+# Build
+npm run build
+
+# Start production server
+npm run start
+
+# Or development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
