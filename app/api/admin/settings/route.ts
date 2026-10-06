@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllSettings, setSetting } from '@/lib/db';
 import { requireAdminSession, adminAuthResponse } from '@/lib/auth';
+import { ensureUploadDir } from '@/lib/upload';
 import path from 'path';
 import fs from 'fs';
 
@@ -42,14 +43,22 @@ export async function PATCH(req: NextRequest) {
       if (!allowed.includes(qrFile.type)) {
         return NextResponse.json({ error: 'QR image must be JPG, PNG, WEBP, or GIF' }, { status: 400 });
       }
-      const ext = path.extname(qrFile.name) || '.png';
-      const filename = `qr_${Date.now()}${ext}`;
-      const publicPath = path.join(process.cwd(), 'public', 'images', filename);
-      const dir = path.dirname(publicPath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      const ext = (path.extname(qrFile.name) || '.png').toLowerCase();
+      const uploadDir = ensureUploadDir();
+
+      // Clean up previous custom QR files
+      const exts = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+      for (const e of exts) {
+        const oldFile = path.join(uploadDir, `custom_payment_qr${e}`);
+        if (fs.existsSync(oldFile)) {
+          try { fs.unlinkSync(oldFile); } catch {}
+        }
+      }
+
+      const persistentQRPath = path.join(uploadDir, `custom_payment_qr${ext}`);
       const buffer = Buffer.from(await qrFile.arrayBuffer());
-      fs.writeFileSync(publicPath, buffer);
-      setSetting('payment_qr_url', `/images/${filename}`);
+      fs.writeFileSync(persistentQRPath, buffer);
+      setSetting('payment_qr_url', `/api/qr?v=${Date.now()}`);
     }
 
     // Handle other settings from form

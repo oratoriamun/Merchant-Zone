@@ -2,13 +2,17 @@ import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || '5242880', 10); // 5MB
 const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const ALLOWED_EXT = ['.jpg', '.jpeg', '.png', '.webp'];
 
-export function ensureUploadDir() {
-  const absPath = path.resolve(UPLOAD_DIR);
+export function getUploadDir(): string {
+  const dir = process.env.UPLOAD_DIR || './uploads';
+  return path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
+}
+
+export function ensureUploadDir(): string {
+  const absPath = getUploadDir();
   if (!fs.existsSync(absPath)) {
     fs.mkdirSync(absPath, { recursive: true });
   }
@@ -69,5 +73,6 @@ function isValidImageBuffer(buf: Buffer, ext: string): boolean {
 }
 
 export function getUploadedFilePath(filename: string): string {
-  return path.join(path.resolve(UPLOAD_DIR), filename);
+  return path.join(ensureUploadDir(), filename);
 }
+

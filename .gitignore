@@ -39,13 +39,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Database (SQLite)
+# Database (SQLite) — NEVER COMMIT
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 /data/*.db
 /data/*.db-shm
 /data/*.db-wal
 
-# Uploaded files (payment screenshots)
+# Uploaded files (payment screenshots & custom QR) — NEVER COMMIT
+/uploads
 /uploads/
+uploads/
+/uploads/*
 
 # OS files
 Thumbs.db

@@ -3,18 +3,29 @@ import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
 
-const DB_PATH = process.env.DATABASE_PATH || './data/fintech_portal.db';
-const dbDir = path.dirname(DB_PATH);
-
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+export function getDatabasePath(): string {
+  if (process.env.DATABASE_PATH) {
+    const custom = process.env.DATABASE_PATH;
+    return path.isAbsolute(custom) ? custom : path.resolve(process.cwd(), custom);
+  }
+  // Check if legacy fintech_portal.db exists locally
+  const legacy = path.resolve(process.cwd(), 'data/fintech_portal.db');
+  if (fs.existsSync(legacy)) {
+    return legacy;
+  }
+  return path.resolve(process.cwd(), 'data/merchant_zone.db');
 }
 
 let _db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!_db) {
-    _db = new Database(DB_PATH);
+    const dbPath = getDatabasePath();
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    _db = new Database(dbPath);
     _db.pragma('journal_mode = WAL');
     _db.pragma('foreign_keys = ON');
     initSchema(_db);
@@ -91,14 +102,15 @@ function initSchema(db: Database.Database) {
 }
 
 function seedAdmin(db: Database.Database) {
-  const existing = db.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
+  const username = process.env.ADMIN_USERNAME || 'admin';
+  const existing = db.prepare('SELECT id FROM admins WHERE username = ?').get(username);
   if (!existing) {
     const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || 'Rocky@22';
     const hash = bcrypt.hashSync(initialPassword, 12);
     db.prepare(
       'INSERT INTO admins (username, password_hash) VALUES (?, ?)'
-    ).run('admin', hash);
-    console.log('✅ Admin user seeded (username: admin, password: as configured in ADMIN_INITIAL_PASSWORD)');
+    ).run(username, hash);
+    console.log(`✅ Admin user seeded (username: ${username})`);
   }
 }
 
